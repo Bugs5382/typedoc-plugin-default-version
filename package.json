@@ -1,0 +1,57 @@
+{
+    "name": "typedoc-plugin-default-version",
+    "version": "0.0.0-development",
+    "description": "",
+    "engines": {
+        "node": "^18 || ^20"
+    },
+    "module": "./lib/esm/index.js",
+    "main": "./lib/cjs/index.js",
+    "types": "./lib/types/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./lib/types/index.d.ts",
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js",
+            "default": "./lib/cjs/index.js"
+        }
+    },
+    "files": [
+        "lib/"
+    ],
+    "scripts": {
+        "clean": "rm -rf coverage docs lib temp",
+        "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && tsc -p tsconfig.types.json && ./bin/build-types.sh",
+        "build:watch": "tsc -p tsconfig.esm.json -w",
+        "lint": "npmPkgJsonLint . && ts-standard | snazzy",
+        "lint:fix": "npmPkgJsonLint . && ts-standard --fix | snazzy",
+        "typedoc": "typedoc",
+        "typedoc:watch": "typedoc -watch",
+        "update": "npx npm-check-updates -u && npm run update:post-update",
+        "pack": "npm pack",
+        "prepublishOnly": "npm run clean && npm run build && npm run pack",
+        "test": "jest",
+        "test:open": "jest --detectOpenHandles",
+        "test:watch": "jest --watch",
+        "test:ci": "jest --ci",
+        "test:coverage": "jest --coverage",
+        "semantic-release": "semantic-release",
+        "semantic-release:dry-run": "semantic-release --dry-run",
+        "update:post-update": "npm install && npm run test:ci"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Bugs5382/typedoc-plugin-default-version"
+    },
+    "keywords": [
+        ""
+    ],
+    "author": {
+        "name": "Shane Froebel"
+    },
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/Bugs5382/typedoc-plugin-default-version/issues"
+    },
+    "homepage": "https://github.com/Bugs5382/typedoc-plugin-default-version#readme"
+}
