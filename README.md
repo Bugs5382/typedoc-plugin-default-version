@@ -1,8 +1,17 @@
-# typedoc-plugin-default-version
+# Typedoc Plugin Default Version
 
-> 
+> The ability to create a Typedoc exported site that shows all the versions of your code. This way users who are still using old versions to look at your API or for people to see the changes between versions.
 
-If you are using this plugin/NPM, please (:star:) star this repository, submit PRs, and issues. This way I can make sure the repositories with much usage can be maintained based on demand.
+If you are using this plugin/NPM, please (:star:) star this repository, submit PRs, and issues.
+This way I can make sure the repositories with much usage can be maintained based on demand.
+
+As a plugin for TypeDoc, this brings you these Key Features:
+* It will export the current version, and add it into the designated repository and branch, and update the listing in the drop-down for selection.
+* Add a dropdown to any theme and required JS files to the project for it to show if it's new.
+* Local support to regenerate your target repository from previously published tagged versions of your code.
+* If old tags did not include any Typedoc generation, the initial prompts will ask where your final Typedoc config is, and use that if nothing is found.
+
+> Note: Currently, this version only supports repositories on GitHub. If you wish to contribute to work on repositories outside GitHub, please submit a PR.
 
 ## Table of Contents
 
