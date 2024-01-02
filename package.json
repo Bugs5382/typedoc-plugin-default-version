@@ -66,6 +66,8 @@
         "@semantic-release/git": "^10.0.1",
         "@semantic-release/release-notes-generator": "^12.1.0",
         "@the-rabbit-hole/semantic-release-config": "^1.4.0",
+        "@types/cli-progress": "^3.11.5",
+        "@types/got": "^9.6.12",
         "@types/inquirer": "^9.0.7",
         "@types/jest": "^29.5.11",
         "@types/node": "^20.10.6",
@@ -81,11 +83,12 @@
         "ts-node": "^10.9.2",
         "ts-standard": "^12.0.2",
         "tsd": "^0.30.1",
-        "typedoc": "^0.25.5",
+        "typedoc": "^0.25.6",
         "typescript": "^5.3.3"
     },
     "dependencies": {
         "cli-progress": "^3.12.0",
+        "got": "^13.0.0",
         "inquirer": "^9.2.12",
         "lodash": "^4.17.21",
         "octokit": "^3.1.2",
