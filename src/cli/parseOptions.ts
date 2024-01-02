@@ -6,14 +6,14 @@ import { hideBin } from 'yargs/helpers'
  * @since 1.5.0
  */
 export const parseOptions = async (): Promise<{
-  branch: string
+  branch?: string
   createBranch: boolean
   dryRun: boolean
   generate: boolean
   repoOrg?: string
   repoUsername?: string
-  token?: string
   skipCommit: boolean
+  token?: string
 }> => {
   const options = await yargs(hideBin(process.argv))
     .usage('Usage: $0 <cmd> [options]')
@@ -33,22 +33,9 @@ export const parseOptions = async (): Promise<{
       type: 'string',
       description: 'Provide an access token that can at minimum read the repository.'
     })
-    .option('dry-run', {
-      alias: 'd',
-      type: 'boolean',
-      default: false,
-      description: 'Will skip the step of generation, but will go through all the other steps.'
-    })
-    .option('skip-commit', {
-      alias: 'skip',
-      type: 'boolean',
-      default: false,
-      description: 'Will skip committing to the repository on the target branch.'
-    })
     .option('branch', {
       alias: 'b',
       type: 'string',
-      default: 'main',
       description: 'The target branch that we will attempt to update.'
     })
     .option('create-branch', {
@@ -56,6 +43,18 @@ export const parseOptions = async (): Promise<{
       type: 'boolean',
       default: false,
       description: 'The target branch, if not found, will be created.'
+    })
+    .option('skip-commit', {
+      alias: 'skip',
+      type: 'boolean',
+      default: false,
+      description: 'Will skip committing to the repository on the target branch.'
+    })
+    .option('dry-run', {
+      alias: 'd',
+      type: 'boolean',
+      default: false,
+      description: 'Will skip the step of generation, but will go through all the other steps.'
     })
     .option('h', {
       alias: 'help',

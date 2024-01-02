@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from 'fs'
+import inquirer from "inquirer";
 import { createWriteStream } from 'node:fs'
 import path from 'node:path'
 import got from 'got'
@@ -85,9 +86,77 @@ export const cli = async (): Promise<void> => {
   })
 
   // Step 4: Ask if we are doing an automatic update to a Git branch, or local
-  // Step 5: If branch, select the branch
+  // @ts-ignore
+  const { branchCommit } = await inquirer.prompt([
+    {
+      name: 'branchCommit',
+      message: typeof options.branch !== 'undefined' ? `Are we going to commit to the target branch (${options.branch}) automatically?` : 'Are we going to commit to a branch (to be determined) automatically?',
+      default: options.skipCommit,
+      type: 'confirm'
+    }])
+
+  // Step 5: Select the target branch,
+  // get the remote branches, and if the 'branch' option matches one of the remote branches, set it as the default
+  const listOfBranches = await gitHub.request('GET /repos/{owner}/{repo}/branches', {
+    owner: mergedOwner,
+    repo: repoName.name
+  })
+
+  const listOfBranchesSelection = listOfBranches.data.map(branch => {
+    return {name: branch.name }
+  })
+
+  const { branchTarget } = await inquirer.prompt([
+    {
+      choices: ['none', ...listOfBranchesSelection ],
+      name: 'branchTarget',
+      message: `Select target branch:`,
+      default: listOfBranchesSelection.findIndex(branch => branch.name == options.branch) || 0,
+      type: 'list'
+    }])
+
   // Step 6: If the branch is not selected, do we create one?
   // Step 7: If we need to create one, what is the name of that branch?
+  if (branchTarget === 'none') {
+
+    // @ts-ignore
+    const { branchName } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'branchName',
+        message: 'Target Branch Name:',
+        default: typeof options.branch !== 'undefined' ? options.branch : 'gh-pages',
+        when: () => branchTarget === "none" && typeof options.branch === 'undefined',
+        validate: (result) => {
+          if (result === '') {
+            return 'Error: Please enter a branch name. Control-X to exit.'
+          } else {
+            return true
+          }
+        },
+      }, {
+        type: 'confirm',
+        name: 'branchCreate',
+        message: 'Create the branch?',
+        default: options.createBranch,
+        when: (answers) => typeof answers.branchName !== 'undefined'
+      }])
+
+    // console.log(branchName)
+
+  }
+
+  const { finalConfirmation } = await inquirer.prompt([
+    {
+      name: 'finalConfirmation',
+      message: 'Confirm your selections above are correct above. Are they?',
+      default: false,
+      type: 'confirm'
+    }])
+
+  if (finalConfirmation === false) {
+    process.exit()
+  }
 
   // Downloading and Processing!
 
