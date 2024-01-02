@@ -4,11 +4,12 @@ import fs from "fs";
 import inquirer from 'inquirer'
 import {createWriteStream} from "node:fs";
 import path from "node:path";
-import {CLI_PROGRESS} from "./cli/constants.js";
-import { octokitInstance } from './cli/octokit.js'
-import { parseOptions } from './cli/parseOptions.js'
 import got from 'got'
 import cliProgress from 'cli-progress'
+import {CLI_PROGRESS} from "./helpers/constants.js";
+import { octokitInstance } from './helpers/octokit.js'
+import { parseOptions } from './cli/parseOptions.js'
+import * as Questions from "./cli/questions/index.js";
 
 /**
  * Main Executable Function
@@ -20,47 +21,19 @@ export const cli = async (): Promise<void> => {
   const options = await parseOptions()
 
   // Step 1: Gather Repos
-  const { repoType, repoUsername, repoOrg, repoToken } =
-    await inquirer.prompt([
-      {
-        choices: [
-          { name: 'Organizational', value: 'org' },
-          { name: 'User', value: 'user' }
-        ],
-        default: 1,
-        name: 'repoType',
-        message: 'GitHub Type of Repo:',
-        type: 'list',
-        filter (val: string) { return val.toLowerCase() }
-      }, {
-        type: 'input',
-        name: 'repoUsername',
-        message: 'Enter GitHub Username:',
-        when: (answers) => answers.repoType === 'user' && typeof process.env.GITHUB_USER === 'undefined'
-      }, {
-        type: 'input',
-        name: 'repoOrg',
-        message: 'Enter GitHub Org:',
-        when: (answers) => answers.repoType === 'org' && typeof process.env.GITHUB_ORG === 'undefined'
-      }, {
-        type: 'password',
-        name: 'repoToken',
-        message: 'Enter Valid Token: ',
-        when: typeof options.token === 'undefined' && typeof process.env.NPM_TOKEN === 'undefined'
-      }]
-    )
+  const setOneAnswers = await Questions.setOne(options)
 
   let mergedOwner
-  mergedOwner = typeof process.env.GITHUB_USER !== 'undefined' ? process.env.GITHUB_USER : repoUsername
+  mergedOwner = typeof process.env.GITHUB_USER !== 'undefined' ? process.env.GITHUB_USER : setOneAnswers.repoUsername
   if (typeof mergedOwner === 'undefined') {
-    mergedOwner = typeof process.env.GITHUB_ORG !== 'undefined' ? process.env.GITHUB_ORG : repoOrg
+    mergedOwner = typeof process.env.GITHUB_ORG !== 'undefined' ? process.env.GITHUB_ORG : setOneAnswers.repoOrg
   }
 
   // build the connection
-  const gitHub = octokitInstance(typeof repoToken !== 'undefined' ? repoToken : process.env.NPM_TOKEN)
+  const gitHub = octokitInstance(typeof setOneAnswers.repoToken !== 'undefined' ? setOneAnswers.repoToken : process.env.NPM_TOKEN)
 
   let repos
-  if (repoType === 'user') {
+  if (setOneAnswers.repoType === 'user') {
     repos = await gitHub.request(
       'GET /users/{username}/repos',
       {
@@ -86,18 +59,10 @@ export const cli = async (): Promise<void> => {
     return { name: repo.name, value: repo.name }
   })
 
-
   // Step 2: Select Repos
-  const { selectedRepo } = await inquirer.prompt([
-    {
-      choices: listReposSelection,
-      name: 'selectedRepo',
-      message: 'Which repositories would you like to generate for?',
-      type: 'list'
-    }])
+  const setTwoAnswers = await Questions.setTwo(listReposSelection)
 
-
-  const repoName = listRepos.find((item: { name: string; }) => item.name == selectedRepo)
+  const repoName = listRepos.find((item: { name: string; }) => item.name == setTwoAnswers.selectedRepo)
 
   if (typeof repoName === 'undefined') {
     throw new Error('problem found.')

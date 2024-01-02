@@ -11,6 +11,7 @@ export const parseOptions = async (): Promise<{
   dryRun: boolean
   generate: boolean
   repoOrg?: string
+  repoUsername?: string
   token?: string
   skipCommit: boolean
 }> => {
@@ -20,7 +21,12 @@ export const parseOptions = async (): Promise<{
     .option('repoOrg', {
       alias: 'org',
       type: 'string',
-      description: 'Enter the repository org or name.'
+      description: 'Enter the organization or name.'
+    })
+    .option('repoUsername', {
+      alias: 'user',
+      type: 'string',
+      description: 'Enter the username.'
     })
     .option('token', {
       alias: 't',
@@ -67,6 +73,7 @@ export const parseOptions = async (): Promise<{
     dryRun: options.dryRun,
     generate: generate[0] === 'generate',
     repoOrg: options.repoOrg,
+    repoUsername: options.repoUsername,
     skipCommit: options.skipCommit,
     token: options.token
   }
