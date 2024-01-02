@@ -1,12 +1,9 @@
 #!/usr/bin/env node
 
 import fs from 'fs'
-import inquirer from "inquirer";
-import { createWriteStream } from 'node:fs'
+import inquirer from 'inquirer'
 import path from 'node:path'
-import got from 'got'
-import cliProgress from 'cli-progress'
-import { CLI_PROGRESS } from './helpers/constants.js'
+import { downloadFile } from './helpers/downloadFile.js'
 import { octokitInstance } from './helpers/octokit.js'
 import { parseOptions } from './cli/parseOptions.js'
 import * as Questions from './cli/questions/index.js'
@@ -86,7 +83,7 @@ export const cli = async (): Promise<void> => {
   })
 
   // Step 4: Ask if we are doing an automatic update to a Git branch, or local
-  // @ts-ignore
+  // @ts-expect-error
   const { branchCommit } = await inquirer.prompt([
     {
       name: 'branchCommit',
@@ -103,51 +100,64 @@ export const cli = async (): Promise<void> => {
   })
 
   const listOfBranchesSelection = listOfBranches.data.map(branch => {
-    return {name: branch.name }
+    return { name: branch.name }
   })
 
   const { branchTarget } = await inquirer.prompt([
     {
-      choices: ['none', ...listOfBranchesSelection ],
+      choices: ['none', ...listOfBranchesSelection],
       name: 'branchTarget',
-      message: `Select target branch:`,
-      default: listOfBranchesSelection.findIndex(branch => branch.name == options.branch) || 0,
+      message: 'Select target branch:',
+      default: !isNaN(listOfBranchesSelection.findIndex(branch => branch.name === options.branch)) ? listOfBranchesSelection.findIndex(branch => branch.name === options.branch) : 0,
       type: 'list'
     }])
 
   // Step 6: If the branch is not selected, do we create one?
   // Step 7: If we need to create one, what is the name of that branch?
   if (branchTarget === 'none') {
-
-    // @ts-ignore
+    // @ts-expect-error
     const { branchName } = await inquirer.prompt([
       {
         type: 'input',
         name: 'branchName',
         message: 'Target Branch Name:',
         default: typeof options.branch !== 'undefined' ? options.branch : 'gh-pages',
-        when: () => branchTarget === "none" && typeof options.branch === 'undefined',
+        when: () => branchTarget === 'none' && typeof options.branch === 'undefined',
         validate: (result) => {
           if (result === '') {
             return 'Error: Please enter a branch name. Control-X to exit.'
           } else {
+            if (listOfBranchesSelection.findIndex(branch => branch.name === result) > -1) {
+              return 'Error: Please enter a branch name that does not exist. Control-X to exit.'
+            }
             return true
           }
-        },
-      }, {
-        type: 'confirm',
-        name: 'branchCreate',
-        message: 'Create the branch?',
-        default: options.createBranch,
-        when: (answers) => typeof answers.branchName !== 'undefined'
+        }
       }])
 
     // console.log(branchName)
-
   }
 
-  const { finalConfirmation } = await inquirer.prompt([
+  // @ts-ignore
+  const { workingFolder, dryRun, finalConfirmation } = await inquirer.prompt([
     {
+      type: 'input',
+      name: 'workingFolder',
+      message: 'The temp folder that is created in your current working folder to do this work. It will include a Git repo that where all the magic will happen.',
+      default: 'temp',
+      validate: (result) => {
+        if (result === '') {
+          return 'Error: Please enter a folder name. Control-X to exit.'
+        } else {
+          return true
+        }
+      }
+    }, {
+      name: 'dryRun',
+      message: 'DRY RUN: This will do all steps other than running `git commit` and `git push`:',
+      default: options.dryRun,
+      type: 'confirm'
+    }, {
       name: 'finalConfirmation',
       message: 'Confirm your selections above are correct above. Are they?',
       default: false,
@@ -159,32 +169,15 @@ export const cli = async (): Promise<void> => {
   }
 
   // Downloading and Processing!
-
-  const cwd = path.join(process.cwd(), 'temp')
+  const cwd = path.join(process.cwd(), workingFolder)
   fs.mkdirSync(cwd, { recursive: true })
 
   // Download Tarballs first
-  tarBalls.forEach((tarBall) => {
+  for (const tarBall of tarBalls) {
     if (typeof tarBall !== 'undefined') {
-      const downloadStream = got.stream(tarBall.value)
-      const fileWriterStream = createWriteStream(`temp/${tarBall.name}.gz`)
-
-      const bar = new cliProgress.SingleBar({}, CLI_PROGRESS(`${tarBall.name}.gz`))
-      bar.start(0, 0)
-
-      downloadStream.on('downloadProgress', progress => {
-        if (typeof progress.total !== 'number') {
-          return
-        }
-        bar.setTotal(progress.total)
-        bar.update(progress.transferred)
-      })
-
-      downloadStream.pipe(fileWriterStream)
-
-      bar.stop()
+      await downloadFile(tarBall)
     }
-  })
+  }
 
   // Extract Tar Balls
 
