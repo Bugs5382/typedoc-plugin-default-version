@@ -1,7 +1,7 @@
-import inquirer from "inquirer";
+import inquirer from 'inquirer'
 
-export const setTwo = async(listReposSelection: {name: string, value: string}[]): Promise<any> => {
-  return inquirer.prompt([
+export const setTwo = async (listReposSelection: Array<{ name: string, value: string }>): Promise<{ selectedRepo: string }> => {
+  return await inquirer.prompt([
     {
       choices: listReposSelection,
       name: 'selectedRepo',
