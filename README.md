@@ -1,4 +1,4 @@
-# Typedoc Plugin Default Version
+# TypeDoc Plugin Default Version
 
 > The ability to create a Typedoc exported site that shows all the versions of your code. This way users who are still using old versions to look at your API or for people to see the changes between versions.
 
